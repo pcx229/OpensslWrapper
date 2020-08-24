@@ -18,6 +18,7 @@ using namespace std;
 #include "hash.h"
 using namespace crypto;
 
+
 namespace crypto {
     
     /*

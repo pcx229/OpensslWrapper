@@ -384,16 +384,15 @@ namespace crypto {
         if(private_key_format == AUTO) {
             private_key_format = getECKEYFormatOfAuto(file_private_key_path);
         }
-        
         // read private key
         FILE *fprv = fopen(file_private_key_path, "r");
         if(fprv == NULL) {
-            throw "file could not be opend";
+            throw "file could not be opened";
         }
         switch(private_key_format) {
             case PEM:
                 if(PEM_read_ECPrivateKey(fprv, &eckey_private, NULL, (void *)password) == NULL) {
-                    throw "private key could not be read duo to incorrect file or password";
+                    throw "private key could not be read due to incorrect file or password";
                 }
                 break;
             case DER:
@@ -506,7 +505,7 @@ namespace crypto {
 
         // check if key exist
         if(eckey_private == NULL || evkey_private == NULL) {
-            throw "private key dose not exist";
+            throw "Private key dose not exist";
         }
 
         // auto format detection option
@@ -517,7 +516,7 @@ namespace crypto {
         // create output file
         FILE *fprv = fopen(file_private_key_path, "w+");
         if(fprv == NULL) {
-            throw "file could not be opend";
+            throw "File could not be opened";
         }
         EC_KEY_set_asn1_flag(eckey_private, OPENSSL_EC_NAMED_CURVE);
         const EVP_CIPHER *cipher = NULL;
@@ -526,16 +525,17 @@ namespace crypto {
                 if(cipher_type != no_cipher) {
                     cipher = EVP_get_cipherbyname(cipherToString(cipher_type));
                     if(cipher == NULL) {
-                        throw invalid_argument("chipher type is unknown");
+                        throw invalid_argument("Cipher type is unknown");
                     }
                 }
                 PEM_write_ECPrivateKey(fprv, eckey_private, cipher, NULL, 0, NULL, (void *)password);
+                //cout << OpensslException("").extended();
                 break;
             case DER:
                 i2d_ECPrivateKey_fp(fprv, eckey_private);
                 break;
             default:
-                throw invalid_argument("private key file format is not supported");
+                throw invalid_argument("Private key file format is not supported");
         }
         fclose(fprv);
     }
@@ -543,7 +543,7 @@ namespace crypto {
 
         // check if key exist
         if(eckey_public == NULL || evkey_public  == NULL) {
-            throw "public key dose not exist";
+            throw "Public key dose not exist";
         }
 
         // auto format detection option
@@ -554,7 +554,7 @@ namespace crypto {
         // create output file
         FILE *fpub = fopen(file_public_key_path, "w+");
         if(fpub == NULL) {
-            throw "file could not be opend";
+            throw "file could not be opened";
         }
         EC_KEY_set_asn1_flag(eckey_public , OPENSSL_EC_NAMED_CURVE);
         switch(public_key_format) {
