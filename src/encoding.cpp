@@ -16,6 +16,10 @@ namespace crypto {
         throw invalid_argument("unknown data encoding type");
     }
 
+	string encoding(const string &bytes, data_encoding type) {
+		return encoding((unsigned char *)bytes.c_str(), bytes.size(), type);
+	}
+
     string decoding(const string &enc, data_encoding enc_type) {
         switch (enc_type)
         {

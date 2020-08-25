@@ -17,6 +17,7 @@ using namespace std;
 
 #include "hash.h"
 using namespace crypto;
+#include "OpensslException.h"
 
 
 namespace crypto {
@@ -46,11 +47,18 @@ namespace crypto {
     int getEllipticCurveNID(elliptic_curve curve);
 
     enum file_eckey_format{ 
-        AUTO, 
+        AUTO, // detect format based on file extension or set to default DER
         PEM, 
         DER 
     };
 
+    /**
+     * determine what is the format to use when an AUTO format is given.
+     * if the key file name extension has explicit specific format(like .pem or .der)
+     * that format will be selected, otherwise DER is selected by default.
+     * @param file_path_key a file path for the key file
+     * @return PEM or DER format
+     */
     file_eckey_format getECKEYFormatOfAuto(const char *file_path_key);
 
     enum cipher {
@@ -208,7 +216,9 @@ namespace crypto {
 
     const char *cipherToString(cipher c);
 
-    /* elliptic curve class can generate keys + sign and verify a certificate */ 
+    /**
+     *  elliptic curve class can generate keys + sign and verify a certificate
+     */
     class EC {
 
         EC_KEY *eckey_private = NULL, *eckey_public = NULL;
@@ -216,33 +226,168 @@ namespace crypto {
 
         public:
 
-        EC();
-        EC(const char *file_private_key_path, const char *file_public_key_path);
-        EC(const char *file_private_key_path, file_eckey_format private_key_format, const char *file_public_key_path, file_eckey_format public_key_format);
+        /**
+         * load private and public keys, AUTO detect file format.
+         * @param file_private_key_path private key file path
+         * @param file_public_key_path public key file path
+         * @throw invalid_argument, OpensslException, runtime_error
+         */
+        EC(const char *file_private_key_path=NULL, const char *file_public_key_path=NULL);
+
+        /**
+         * load private and public keys.
+         * @param file_private_key_path private key file path
+         * @param private_key_format private key file format
+         * @param file_public_key_path public key file path
+         * @param public_key_format public key file format
+         * @throw invalid_argument, OpensslException, runtime_error
+         */
+        EC(const char *file_private_key_path, file_eckey_format private_key_format, const char *file_public_key_path=NULL, file_eckey_format public_key_format=AUTO);
 
         ~EC();
 
+        /**
+         * remove private/public keys
+         */
         void clear();
 
+        /**
+         * load private and public keys, AUTO detect file format.
+         * @param file_private_key_path private key file path
+         * @param file_public_key_path public key file path
+         * @throw invalid_argument, OpensslException, runtime_error
+         */
         void load(const char *file_private_key_path, const char *file_public_key_path);
+
+        /**
+         * load private and public keys.
+         * @param file_private_key_path private key file path
+         * @param private_key_format private key file format
+         * @param file_public_key_path public key file path
+         * @param public_key_format public key file format
+         * @throw invalid_argument, OpensslException, runtime_error
+         */
         void load(const char *file_private_key_path, file_eckey_format private_key_format, const char *file_public_key_path, file_eckey_format public_key_format);
+
+        /**
+         * load private key, clear any previous key pair.
+         * @param file_private_key_path private key file path
+         * @param private_key_format private key file format
+         * @password required only if the file is encrypted
+         * @throw invalid_argument, OpensslException, runtime_error
+         */
         void load_private(const char *file_private_key_path, file_eckey_format private_key_format=AUTO, const char *password=NULL);
+
+        /**
+         * load public key, any previous public key is discarded.
+         * note: public key is not tested if it match the private part.
+         * @param file_public_key_path public key file path
+         * @param public_key_format public key file format
+         * @throw invalid_argument, OpensslException, runtime_error
+         */
         void load_public(const char *file_public_key_path, file_eckey_format public_key_format=AUTO);
+
+        /**
+         * load private and public keys.
+         * @param private_key private key as base64 encoded string
+         * @param public_key public key as base64 encoded string
+         * @throw OpensslException, runtime_error
+         */
         void load(const string &private_key, const string &public_key);
+
+        /**
+         * load private key.
+         * @param private_key private key string
+         * @param data_encoding private key string encoding
+         * @throw OpensslException, runtime_error
+         */
         void load_private(const string &private_key, data_encoding format=BASE64);
+
+        /**
+         * load public key.
+         * @param public_key public key string
+         * @param data_encoding public key string encoding
+         * @throw OpensslException, runtime_error
+         */
         void load_public(const string &public_key, data_encoding format=BASE64);
 
+        /**
+         * save private and public keys to files.
+         * @param file_private_key_path file where private key will be saved to
+         * @param file_public_key_path file where public key will be saved to
+         * @throw invalid_argument, OpensslException, runtime_error
+		 */
         void save(const char *file_private_key_path, const char *file_public_key_path);
+
+        /**
+         * save private and public keys to files.
+         * @param file_private_key_path file where private key will be saved to
+         * @param private_key_format private key output file format
+         * @param file_public_key_path file where public key will be saved to
+         * @param public_key_format public key output file format
+         * @throw invalid_argument, OpensslException, runtime_error
+		 */
         void save(const char *file_private_key_path, file_eckey_format private_key_format, const char *file_public_key_path, file_eckey_format public_key_format);
+
+        /**
+         * write private key to a file.
+         * @param file_private_key_path file where private key will be saved to
+         * @param private_key_format private key output file format, if not specified then do AUTO determination for desired format.
+         * @param cipher_type optional if encrypted key file is wanted.
+         * 		  			  dose not support DER file output format.
+         * @param password paired with cipher_type parameter to use for encryption pass phase.
+         * @throw invalid_argument, OpensslException, runtime_error
+         */
         void save_private(const char *file_private_key_path, file_eckey_format private_key_format=AUTO, cipher cipher_type=no_cipher, const char *password=NULL);
+
+        /**
+         * write public key to a file.
+         * @param file_public_key_path file where public key will be saved to
+         * @param public_key_format public key output file format, if not specified then do AUTO determination for desired format.
+		 * @throw invalid_argument, OpensslException, runtime_error
+		 */
         void save_public(const char *file_public_key_path, file_eckey_format public_key_format=AUTO);
+
+        /**
+         * get private key as a string.
+         * @param format choose different encoding for key output
+         * @return the private key as a string
+         * @throw runtime_error, OpensslException
+		 */
         const string get_private(data_encoding format=BASE64);
+
+        /**
+         * get public key as a string.
+         * @param format choose different encoding for key output
+         * @return the public key as a string
+         * @throw runtime_error, OpensslException
+         */
         const string get_public(data_encoding format=BASE64);
 
+        /**
+         * generate private and public keys.
+         * @param curve the elliptic curve to use for key generation
+         */
         void generate_keys(elliptic_curve curve);
 
+        /**
+         * create a signature for a data using the private key.
+         * @param hash a hash function is required, elliptic curves only support
+         * 				sha1, sha224, sha256, sha384 and sha512 hashing.
+         * @param data data to create signature for
+         * @param signature output parameter for the result signature
+         * @throw invalid_argument, OpensslException, runtime_error
+         */
         void sign(hash_types hash, istream &data, ostream &signature);
 
+        /**
+         * verify data with a given signature using the public key.
+         * @param hash a hash function that was used for signing
+         * @param data data to verify with the signature
+         * @param signature the signature
+         * @return true if the signature was generated from the data
+         * @throw invalid_argument, OpensslException, runtime_error
+         */
         bool verify(hash_types hash, istream &data, istream &signature);
 
     };

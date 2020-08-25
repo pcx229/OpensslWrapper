@@ -13,7 +13,7 @@ void test_hash()
 {
     // string
 
-	cout << "string hashing:" << endl << endl;
+	cout << "- String hashing:" << endl << endl;
 
 	string str = "hello world";
 	cout << "string: " << str << endl;
@@ -42,7 +42,7 @@ void test_hash()
 
 	// stream
 
-	cout << endl << "stream hashing:" << endl << endl;
+	cout << endl << "- Stream hashing:" << endl << endl;
 
 	stringstream ss;
     ss << "hello" << " " << "world" << " " << "this" << " " << "is" << " " << "a" << " " << "test";
@@ -51,7 +51,7 @@ void test_hash()
 
     // copy state
 
-	cout << endl << "copying state:" << endl << endl;
+	cout << endl << "- Copying state:" << endl << endl;
 
     chash<sha1> h1, h2;
     h1 << "hello" << " " << "world";
@@ -63,7 +63,7 @@ void test_hash()
 
     // string assignment
 
-	cout << endl << "string assignment:" << endl << endl;
+	cout << endl << "- String assignment:" << endl << endl;
 
     string hex_hash_hello_world = chash<sha256>("hello world");
     cout << "hash of 'hello world': " << hex_hash_hello_world << endl;

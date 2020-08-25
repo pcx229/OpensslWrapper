@@ -11,47 +11,52 @@ void test_ec()
 {
     EC e;
 
-    // Generate keys
+    try {
 
-    cout << "- Generating keys:" << endl;
+		// Generate keys
 
-    e.generate_keys(secp256k1);
-    cout << "private key:\t" << e.get_private() << endl;
-    cout << "public key:\t" << e.get_public() << endl;
+		cout << "- Generating keys:" << endl;
 
-    // Save with a key
+		e.generate_keys(secp256k1);
+		cout << "private key:\t" << e.get_private() << endl;
+		cout << "public key:\t" << e.get_public() << endl;
 
-    cout << "- Saving keys to files private.pem and public.pem" << endl;
+		// Save with a key
 
-    e.save_private("private.pem", AUTO, des_ede_cbc, "hello");
-    e.save_public("public.pem");
+		cout << "- Saving keys to files private.pem and public.pem" << endl;
 
-    // Load key files
+		e.save_private("private.pem", AUTO, des_ede_cbc, "hello");
+		e.save_public("public.pem");
 
-    cout << "- Loading keys from files private.pem and public.pem" << endl;
-    
-    e.load_private("private.pem", AUTO, "hello");
-    e.load_public("public.pem");
+		// Load key files
 
-    // Sign and verify data
+		cout << "- Loading keys from files private.pem and public.pem" << endl;
 
-    stringstream sdata;
-    sdata << "hello world";
+		e.load_private("private.pem", AUTO, "hello");
+		e.load_public("public.pem");
 
-    // Sign
+		// Sign and verify data
 
-    cout << "- Signing data with private key:" << endl;
+		stringstream sdata;
+		sdata << "hello world";
 
-    stringstream signature;
-    e.sign(sha1, sdata, signature);
-    cout << "data: '" + sdata.str() + "' , signature: " << Base64::Encode((const unsigned char *)signature.str().c_str(), signature.str().size()) << endl;
-    
-    // Verify
+		// Sign
 
-    cout << "- Verifying data with public key:" << endl;
-    
-    sdata.clear();
-    sdata.seekg(0, ios::beg);
-    cout << "is signature valid? " << (e.verify(sha1, sdata, signature) ? "yes" : "no") << endl;
+		cout << "- Signing data with private key:" << endl;
 
+		stringstream signature;
+		e.sign(sha1, sdata, signature);
+		cout << "data: '" + sdata.str() + "' , signature: " << Base64::Encode((const unsigned char *)signature.str().c_str(), signature.str().size()) << endl;
+
+		// Verify
+
+		cout << "- Verifying data with public key:" << endl;
+
+		sdata.clear();
+		sdata.seekg(0, ios::beg);
+		cout << "is signature valid? " << (e.verify(sha1, sdata, signature) ? "yes" : "no") << endl;
+
+    } catch(const exception &e) {
+    	cerr << e.what();
+    }
 }

@@ -13,13 +13,21 @@ namespace crypto {
     enum data_encoding{ BINARY, HEX, BASE64 };
 
     /**
-     * convert a raw bytes array to string object with the encoding specified
+     * convert a raw bytes array to a string object with the encoding specified
      * @param bytes an array of raw bytes to convert
      * @param length bytes array length
      * @param type encoding type HEX, BASE64 or BINARY(default)
      * @returns a string object that is the bytes given with the encoding
      */
     string encoding(const unsigned char *bytes, unsigned int length, data_encoding type=BINARY);
+
+    /**
+     * convert a raw bytes string to a string object with the encoding specified
+     * @param a string containing bytes to convert
+     * @param type encoding type HEX, BASE64 or BINARY(default)
+     * @returns a string object that is the bytes given with the encoding
+     */
+    string encoding(const string &bytes, data_encoding type=BINARY);
 
     /**
      * convert a string object with the encoding specified to raw bytes array
