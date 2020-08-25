@@ -6,13 +6,13 @@ built on openssl version 1.1.1 and c++ version 11
 
 ## Installing And Compiling
 
-#### using newer version of openssl:
-if you are using a later version this flag may be useful to hide deprecated warnings **-Wno-deprecated-declarations**    
-
 ## Windows MinGW
 
 download openssl developers edition for MinGW to the version of windows you have from here:  
 https://slproweb.com/products/Win32OpenSSL.html  
+
+#### using newer version of openssl:
+if you are using a later version this flag may be useful to hide deprecated warnings **-Wno-deprecated-declarations**    
 
 #### OPENSSL_Uplink error:
 
@@ -42,8 +42,9 @@ command for example(replace path to where your openssl libraries folder is locat
 to install the development package `sudo apt-get install libssl-dev`
 
 alternatively compiling form source - not necessary, will install the last development version  
-note: when using the latest version of openssl some things may not work.  
-      you should consider using the flag **-Wno-deprecated-declarations** when compiling to hide deprecated wornings  
+* *note:*  
+when using the latest version of openssl some things may not work.  
+you should consider using the flag **-Wno-deprecated-declarations** when compiling to hide deprecated warnings.  
 
 ```
 git clone git://git.openssl.org/openssl.git
