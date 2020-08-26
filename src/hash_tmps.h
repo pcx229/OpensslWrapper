@@ -2,7 +2,7 @@
 namespace crypto {
 
 	template <hash_types type>
-    void hash<type>::init() {
+    void Hash<type>::init() {
 
         const EVP_MD *md = EVP_get_digestbyname(getHashTypeString(type));
         if (!md) {
@@ -20,36 +20,36 @@ namespace crypto {
     }
 
     template <hash_types type>
-    hash<type>::hash() {
+    Hash<type>::Hash() {
         init();
     }
 
     template <hash_types type>
-    hash<type>::hash(const string &data) {
-        init();
-        update(data);
-    }
-
-    template <hash_types type>
-    hash<type>::hash(istream &data) {
+    Hash<type>::Hash(const string &data) {
         init();
         update(data);
     }
 
     template <hash_types type>
-    hash<type>::hash(const hash<type> &other) {
+    Hash<type>::Hash(istream &data) {
+        init();
+        update(data);
+    }
+
+    template <hash_types type>
+    Hash<type>::Hash(const Hash<type> &other) {
         this->operator=(other);
     }
 
     template <hash_types type>
-    hash<type>::~hash() {
+    Hash<type>::~Hash() {
         if(mdctx != NULL) {
             EVP_MD_CTX_destroy(mdctx);
         }
     }
 
     template <hash_types type>
-    hash<type> &hash<type>::operator=(const hash<type> &other) {
+    Hash<type> &Hash<type>::operator=(const Hash<type> &other) {
         if(EVP_MD_CTX_copy(mdctx, other.mdctx) != 1) {
         	throw OpensslException("Failed to copy source hash to destination hash");
         }
@@ -62,7 +62,7 @@ namespace crypto {
     }
 
     template <hash_types type>
-    hash<type> &hash<type>::update(const string &data) {
+    Hash<type> &Hash<type>::update(const string &data) {
         if(is_over) {
             throw logic_error("Cannot make updates after digest operation");
         }
@@ -73,12 +73,12 @@ namespace crypto {
     }
 
     template <hash_types type>
-    hash<type> &hash<type>::operator<<(const string &data) {
+    Hash<type> &Hash<type>::operator<<(const string &data) {
         return update(data);
     }
 
     template <hash_types type>
-    hash<type> &hash<type>::update(istream &data) {
+    Hash<type> &Hash<type>::update(istream &data) {
         if(is_over) {
             throw logic_error("Cannot make updates after digest operation");
         }
@@ -94,12 +94,12 @@ namespace crypto {
     }
 
     template <hash_types type>
-    hash<type> &hash<type>::operator<<(istream &data) {
+    Hash<type> &Hash<type>::operator<<(istream &data) {
         return update(data);
     }
 
     template <hash_types type>
-    string hash<type>::digest(data_encoding enc) {
+    string Hash<type>::digest(data_encoding enc) {
         if(!is_over) {
             if(EVP_DigestFinal_ex(mdctx, md_value, &md_len) != 1) {
             	throw OpensslException("Failed to generate hash");
@@ -110,13 +110,13 @@ namespace crypto {
     }
 
     template <hash_types type>
-    hash<type>::operator string() const {
-        return const_cast<hash<type>*>(this)->digest();
+    Hash<type>::operator string() const {
+        return const_cast<Hash<type>*>(this)->digest();
     }
 
     template <hash_types type>
-    ostream &operator<<(ostream &os, const hash<type> &hs) {
-        os << const_cast<hash<type>*>(&hs)->digest();
+    ostream &operator<<(ostream &os, const Hash<type> &hs) {
+        os << const_cast<Hash<type>*>(&hs)->digest();
         return os;
     }
     

@@ -15,7 +15,7 @@ using namespace std;
 #include <openssl/evp.h>
 
 #include "encoding.h"
-#include "OpensslException.h"
+#include "openssl_exception.h"
 
 namespace crypto {
 
@@ -61,7 +61,7 @@ namespace crypto {
      * only support algorithms that EVP_get_digestbyname can receive.
      */
     template <hash_types type>
-    class hash {
+    class Hash {
 
         EVP_MD_CTX *mdctx = NULL;
 
@@ -77,27 +77,27 @@ namespace crypto {
         /**
          * an empty string hash
          */
-        hash();
+        Hash();
 
         /**
          * the hash will be initialized and then updated with the string given
          * @param data hash the bytes in this string
          */
-        hash(const string &data);
+        Hash(const string &data);
 
         /**
          * the hash will be initialized and then updated with the stream given
          * @param data hash the bytes in this stream
          */
-        hash(istream &data);
+        Hash(istream &data);
 
         /**
          * same as = operator
          * @param other a hash with the same algorithm as this one to clone
          */
-        hash(const hash &other);
+        Hash(const Hash &other);
 
-        ~hash();
+        ~Hash();
 
         /**
          * copy the hash given to this one.
@@ -106,7 +106,7 @@ namespace crypto {
          * @param other hash to copy
          * @return this hash
          */
-        hash &operator=(const hash &other);
+        Hash &operator=(const Hash &other);
 
         /**
          * continue hashing with bytes from the string given, this function can
@@ -114,14 +114,14 @@ namespace crypto {
          * @param data string to put in the hash
          * @return this hash
          */
-        hash &update(const string &data);
+        Hash &update(const string &data);
 
         /**
          * same as update() only with an operator
          * @param data string to put in the hash
          * @return this hash
          */
-        hash &operator<<(const string &data);
+        Hash &operator<<(const string &data);
 
         /**
          * continue hashing with bytes from the stream given, this function can
@@ -129,14 +129,14 @@ namespace crypto {
          * @param data stream to put in the hash
          * @return this hash
          */
-        hash &update(istream &data);
+        Hash &update(istream &data);
 
         /**
          * same as update() only with an operator
          * @param data stream to put in the hash
          * @return this hash
          */
-        hash &operator<<(istream &data);
+        Hash &operator<<(istream &data);
 
         /**
          * make the digest value from the hash and return it.

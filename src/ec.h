@@ -17,7 +17,8 @@ using namespace std;
 
 #include "hash.h"
 using namespace crypto;
-#include "OpensslException.h"
+
+#include "openssl_exception.h"
 
 
 namespace crypto {
@@ -221,6 +222,8 @@ namespace crypto {
      */
     class EC {
 
+        EVP_MD_CTX *mdctx = NULL;
+
         EC_KEY *eckey_private = NULL, *eckey_public = NULL;
         EVP_PKEY *evkey_private = NULL, *evkey_public = NULL;
 
@@ -245,6 +248,12 @@ namespace crypto {
         EC(const char *file_private_key_path, file_eckey_format private_key_format, const char *file_public_key_path=NULL, file_eckey_format public_key_format=AUTO);
 
         ~EC();
+
+        /**
+         * create a data container for functions used in this context
+         * @throw OpensslException
+         */
+        void buildContext();
 
         /**
          * remove private/public keys

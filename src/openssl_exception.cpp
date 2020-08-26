@@ -1,5 +1,5 @@
 
-#include "OpensslException.h"
+#include "openssl_exception.h"
 
 OpensslException::OpensslException(string msg) {
 	stringstream ss;

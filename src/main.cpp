@@ -1,11 +1,7 @@
 
-
-#include <iostream>
-using namespace std;
-
-#include "test_ec.cpp"
+#include "test_big_num.cpp"
 
 int main() {
-	test_ec();
+	test_big_num();
     return 0;
 }

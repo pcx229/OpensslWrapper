@@ -349,14 +349,23 @@ namespace crypto {
 
     EC::EC(const char *file_private_key_path, const char *file_public_key_path) {
         load(file_private_key_path, file_public_key_path);
+        buildContext();
     }
     
     EC::EC(const char *file_private_key_path, file_eckey_format private_key_format, const char *file_public_key_path, file_eckey_format public_key_format) {
         load(file_private_key_path, private_key_format, file_public_key_path, public_key_format);
+        buildContext();
     }
 
     EC::~EC() {
         clear();
+		EVP_MD_CTX_destroy(mdctx);
+    }
+
+    void EC::buildContext() {
+		if(! (mdctx = EVP_MD_CTX_create())) {
+			throw OpensslException("Failed to create EVP_MD context");
+		}
     }
 
     void EC::clear() {
@@ -777,15 +786,15 @@ namespace crypto {
         }
         
         // make signature
-        EVP_MD_CTX *mdctx = NULL;
 		int buffer_size = 256;
 		char buffer[buffer_size];
 		size_t siglen = 0;
 		unsigned char *sig = NULL;
         try {
-			if(! (mdctx = EVP_MD_CTX_create())) {
-				throw OpensslException("Failed to create EVP_MD context");
-			}
+        	if(EVP_MD_CTX_reset(mdctx) != 1) {
+				throw OpensslException("Failed to initialize data required for this operation");
+        	}
+
 			if(EVP_DigestSignInit(mdctx, NULL, md, NULL, evkey_private) != 1) {
 				throw OpensslException("Failed to initialize digest operation");
 			}
@@ -808,13 +817,9 @@ namespace crypto {
 			if(EVP_DigestSignFinal(mdctx, sig, &siglen) != 1) {
 				throw OpensslException("Failed to generate signature");
 			}
-			EVP_MD_CTX_destroy(mdctx);
 	        OPENSSL_free(sig);
         } catch(...) {
         	// free used resources
-        	if(mdctx) {
-        		EVP_MD_CTX_destroy(mdctx);
-        	}
         	if(sig) {
         		OPENSSL_free(sig);
         	}
@@ -868,14 +873,15 @@ namespace crypto {
         signature.read((char *) sig, siglen);
 
         // verify
-        EVP_MD_CTX *mdctx = NULL;
         int buffer_size = 256;
         char buffer[buffer_size];
         bool ret;
 
         try {
-			mdctx = EVP_MD_CTX_create();
-			EVP_MD_CTX_init(mdctx);
+        	if(EVP_MD_CTX_reset(mdctx) != 1) {
+				throw OpensslException("Failed to initialize data required for this operation");
+        	}
+
 			if(EVP_DigestVerifyInit(mdctx, NULL, md, NULL, evkey_public) != 1) {
 				throw OpensslException("Failed to initialize digest operation");
 			}
@@ -892,13 +898,9 @@ namespace crypto {
 			} else {
 				ret = true;
 			}
-			EVP_MD_CTX_destroy(mdctx);
 			OPENSSL_free(sig);
         } catch(...) {
         	// free used resources
-        	if(mdctx) {
-    			EVP_MD_CTX_destroy(mdctx);
-        	}
 			OPENSSL_free(sig);
         }
 
