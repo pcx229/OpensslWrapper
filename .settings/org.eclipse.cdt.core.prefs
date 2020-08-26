@@ -1,0 +1,9 @@
+eclipse.preferences.version=1
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.660586954/CYGWIN_HOME/delimiter=;
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.660586954/CYGWIN_HOME/operation=replace
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.660586954/CYGWIN_HOME/value=C\:\\cygwin64\\
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.660586954/PATH/delimiter=;
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.660586954/PATH/operation=replace
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.660586954/PATH/value=${MINGW_HOME}\\bin;${MSYS_HOME}\\bin;C\:/Program Files/Java/jre1.8.0_251/bin/server;C\:/Program Files/Java/jre1.8.0_251/bin;C\:/Program Files/Java/jre1.8.0_251/lib/amd64;C\:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath;C\:\\Python37\\Scripts\\;C\:\\Python37\\;C\:\\WINDOWS\\system32;C\:\\WINDOWS;C\:\\WINDOWS\\System32\\Wbem;C\:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C\:\\WINDOWS\\System32\\OpenSSH\\;C\:\\Program Files\\Intel\\WiFi\\bin\\;C\:\\Program Files\\Common Files\\Intel\\WirelessCommon\\;C\:\\Program Files\\Git\\cmd;C\:\\Program Files (x86)\\NoteBook FanControl\\;C\:\\Users\\\u05D0\u05DC\u05D9\\AppData\\Local\\Programs\\Python\\Launcher\\;C\:\\Users\\\u05D0\u05DC\u05D9\\AppData\\Local\\Microsoft\\WindowsApps;C\:\\Users\\\u05D0\u05DC\u05D9\\AppData\\Local\\Programs\\Microsoft VS Code\\bin;C\:\\Users\\\u05D0\u05DC\u05D9\\AppData\\Local\\GitHubDesktop\\bin;C\:\\Program Files\\mingw-w64\\x86_64-8.1.0-win32-seh-rt_v6-rev0\\mingw64\\bin;C\:\\Users\\\u05D0\u05DC\u05D9\\AppData\\Local\\Microsoft\\WindowsApps;C\:\\Program Files\\eclipse
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.660586954/append=true
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.660586954/appendContributed=true
