@@ -7,7 +7,7 @@ namespace crypto {
 		n = BN_new();
 		ctx = BN_CTX_new();
 		if(!n || !ctx) {
-			throw OpensslException("Failed to initialize data");
+			throw OpensslException("failed to initialize data");
 		}
 	}
 
@@ -17,14 +17,14 @@ namespace crypto {
 	BigNum::BigNum(int i) {
 		init();
 		if(BN_set_word(n, abs(i)) != 1) {
-			throw OpensslException("Failed to assign value");
+			throw OpensslException("failed to assign value");
 		}
 		BN_set_negative(n, i<0);
 	}
 	BigNum::BigNum(long long i) {
 		init();
 		if(BN_set_word(n, abs(i)) != 1) {
-			throw OpensslException("Failed to assign value");
+			throw OpensslException("failed to assign value");
 		}
 		BN_set_negative(n, i<0);
 	}
@@ -33,16 +33,16 @@ namespace crypto {
 		switch(input) {
 			case BINARY_BIG_ENDIAN:
 				if(! BN_bin2bn(data, length, n)) {
-					throw OpensslException("Failed to assign value");
+					throw OpensslException("failed to assign value");
 				}
 				break;
 			case BINARY_LITTLE_ENDIAN:
 				if(! BN_lebin2bn(data, length, n)) {
-					throw OpensslException("Failed to assign value");
+					throw OpensslException("failed to assign value");
 				}
 				break;
 			default:
-				throw invalid_argument("Input encoding is not recognized");
+				throw invalid_argument("input encoding is not recognized");
 		}
 	}
 	BigNum::BigNum(const char *str, encoding input) {
@@ -50,22 +50,22 @@ namespace crypto {
 		switch(input) {
 			case HEX:
 				if(BN_hex2bn(&n, str) < 0) {
-					throw OpensslException("Failed to assign value");
+					throw OpensslException("failed to assign value");
 				}
 				break;
 			case DEC:
 				if(BN_dec2bn(&n, str) < 0) {
-					throw OpensslException("Failed to assign value");
+					throw OpensslException("failed to assign value");
 				}
 				break;
 			default:
-				throw invalid_argument("Input encoding is not recognized");
+				throw invalid_argument("input encoding is not recognized");
 		}
 	}
 	BigNum::BigNum(const BigNum &copy) {
 		init();
 		if(! BN_copy(n, copy.n)) {
-			throw OpensslException("Failed to copy other number state");
+			throw OpensslException("failed to copy other number state");
 		}
 	}
 	BigNum::~BigNum() {
@@ -74,7 +74,7 @@ namespace crypto {
 	}
 	BigNum &BigNum::operator=(const BigNum& b) {
 		if(! BN_copy(n, b.n)) {
-			throw OpensslException("Failed to copy other number state");
+			throw OpensslException("failed to copy other number state");
 		}
 		return *this;
 	}
@@ -167,7 +167,7 @@ namespace crypto {
 				}
 				break;
 			default:
-				throw invalid_argument("Output encoding is not recognized");
+				throw invalid_argument("output encoding is not recognized");
 		}
 	}
 	ostream &operator<<(ostream &os, const BigNum &n) {

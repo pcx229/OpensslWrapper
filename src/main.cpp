@@ -1,7 +1,7 @@
 
-#include "test_big_num.cpp"
+#include "test_ec.cpp"
 
 int main() {
-	test_big_num();
-    return 0;
+	test_ec();
+	return 0;
 }

@@ -360,12 +360,16 @@ namespace crypto {
     EC::~EC() {
         clear();
 		EVP_MD_CTX_destroy(mdctx);
+        BN_CTX_free(bnctx);
     }
 
     void EC::buildContext() {
 		if(! (mdctx = EVP_MD_CTX_create())) {
-			throw OpensslException("Failed to create EVP_MD context");
+			throw OpensslException("failed to create EVP_MD context");
 		}
+    	if(! (bnctx = BN_CTX_new())) {
+			throw OpensslException("failed to create BN context");
+    	}
     }
 
     void EC::clear() {
@@ -407,7 +411,7 @@ namespace crypto {
         // read private key
         FILE *fprv = fopen(file_private_key_path, "r");
         if(fprv == NULL) {
-            throw runtime_error("File could not be opened");
+            throw runtime_error("file could not be opened");
         }
         try {
 			switch(private_key_format) {
@@ -416,27 +420,27 @@ namespace crypto {
 						password = "";
 					}
 					if(! PEM_read_ECPrivateKey(fprv, &eckey_private, NULL, (void *)password)) {
-						throw OpensslException("Key could not be read due to invalid file or password");
+						throw OpensslException("key could not be read due to invalid file or password");
 					}
 					break;
 				case DER:
 					if(! d2i_ECPrivateKey_fp(fprv, &eckey_private)) {
-						throw OpensslException("Key could not read from the file");
+						throw OpensslException("key could not read from the file");
 					}
 					break;
 				default:
-					throw invalid_argument("Key file format is not supported");
+					throw invalid_argument("key file format is not supported");
 			}
 			fclose(fprv);
 
 			// check if key is valid
 			if(EC_KEY_check_key(eckey_private) != 1) {
-				throw runtime_error("Key read was invalid");
+				throw runtime_error("key read was invalid");
 			}
 
 			if(! (evkey_private = EVP_PKEY_new()) ||
 					EVP_PKEY_assign_EC_KEY(evkey_private, eckey_private) != 1) {
-				throw OpensslException("Building EVP key failed");
+				throw OpensslException("building EVP key failed");
 			}
 		} catch(...) {
 			// discard changes before exit
@@ -470,33 +474,33 @@ namespace crypto {
         // read public key
         FILE *fpub = fopen(file_public_key_path, "r");
         if(fpub == NULL) {
-            throw runtime_error("File could not be opened");
+            throw runtime_error("file could not be opened");
         }
         try {
         	switch(public_key_format) {
 				case PEM:
 					if(! PEM_read_EC_PUBKEY(fpub, &eckey_public, NULL, NULL)) {
-						throw OpensslException("Key could not be read from the file");
+						throw OpensslException("key could not be read from the file");
 					}
 					break;
 				case DER:
 					if(! d2i_EC_PUBKEY_fp(fpub, &eckey_public)) {
-						throw OpensslException("Key could not be read from the file");
+						throw OpensslException("key could not be read from the file");
 					}
 					break;
 				default:
-					throw invalid_argument("Key file format is not supported");
+					throw invalid_argument("key file format is not supported");
 			}
 			fclose(fpub);
 
 			// check if key is valid
 			if(EC_KEY_check_key(eckey_public) != 1) {
-				throw runtime_error("Key read was invalid");
+				throw runtime_error("key read was invalid");
 			}
 
 			if(! (evkey_public = EVP_PKEY_new()) ||
 					EVP_PKEY_assign_EC_KEY(evkey_public, eckey_public) != 1) {
-				throw OpensslException("Building EVP key failed");
+				throw OpensslException("building EVP key failed");
 			}
         } catch(...) {
 			// discard changes before exit
@@ -531,12 +535,12 @@ namespace crypto {
 			if(! (evkey_private = EVP_PKEY_new()) ||
 					! d2i_AutoPrivateKey(&evkey_private, &bprv, bytes.size()) ||
 					! (eckey_private = EVP_PKEY_get0_EC_KEY(evkey_private))) {
-				throw OpensslException("Building key from string failed");
+				throw OpensslException("building key from string failed");
 			};
 
 			// check if key is valid
 			if(EC_KEY_check_key(eckey_private) != 1) {
-				throw runtime_error("Key read was invalid");
+				throw runtime_error("key read was invalid");
 			}
         } catch(...) {
 			// discard changes before exit
@@ -566,12 +570,12 @@ namespace crypto {
 			if(! (evkey_public = EVP_PKEY_new()) ||
 					! d2i_PUBKEY(&evkey_public, &bpub, bytes.size()) ||
 					! (eckey_public = EVP_PKEY_get0_EC_KEY(evkey_public))) {
-				throw OpensslException("Building key from string failed");
+				throw OpensslException("building key from string failed");
 			}
 
 			// check if key is valid
 			if(EC_KEY_check_key(eckey_public) != 1) {
-				throw runtime_error("Key read was invalid");
+				throw runtime_error("key read was invalid");
 			}
         } catch(...) {
 			// discard changes before exit
@@ -583,18 +587,18 @@ namespace crypto {
 			throw;
         }
     }
-    void EC::save(const char *file_private_key_path, const char *file_public_key_path) {
+    void EC::save(const char *file_private_key_path, const char *file_public_key_path) const {
         save(file_private_key_path, AUTO, file_public_key_path, AUTO);
     }
-    void EC::save(const char *file_private_key_path, file_eckey_format private_key_format, const char *file_public_key_path, file_eckey_format public_key_format) {
+    void EC::save(const char *file_private_key_path, file_eckey_format private_key_format, const char *file_public_key_path, file_eckey_format public_key_format) const {
         save_private(file_private_key_path, private_key_format);
         save_public(file_public_key_path, public_key_format);
     }
-    void EC::save_private(const char *file_private_key_path, file_eckey_format private_key_format, cipher cipher_type, const char *password) {
+    void EC::save_private(const char *file_private_key_path, file_eckey_format private_key_format, cipher cipher_type, const char *password) const {
 
         // check if key exist
         if(eckey_private == NULL || evkey_private == NULL) {
-            throw runtime_error("Key dose not exist");
+            throw runtime_error("key dose not exist");
         }
 
         // auto format detection option
@@ -605,7 +609,7 @@ namespace crypto {
         // create output file
         FILE *fprv = fopen(file_private_key_path, "w+");
         if(fprv == NULL) {
-            throw runtime_error("File could not be opened");
+            throw runtime_error("file could not be opened");
         }
         EC_KEY_set_asn1_flag(eckey_private, OPENSSL_EC_NAMED_CURVE);
         try {
@@ -613,19 +617,19 @@ namespace crypto {
 			switch(private_key_format) {
 				case PEM:
 					if(cipher_type != no_cipher && ! (cipher = EVP_get_cipherbyname(cipherToString(cipher_type)))) {
-						throw invalid_argument("Cipher type is unknown");
+						throw invalid_argument("cipher type is unknown");
 					}
 					if(PEM_write_ECPrivateKey(fprv, eckey_private, cipher, NULL, 0, NULL, (void *)password) != 1) {
-						throw OpensslException("Writing key failed");
+						throw OpensslException("writing key failed");
 					}
 					break;
 				case DER:
 					if(i2d_ECPrivateKey_fp(fprv, eckey_private) != 1) {
-						throw OpensslException("Writing key failed");
+						throw OpensslException("writing key failed");
 					}
 					break;
 				default:
-					throw invalid_argument("Private key file format is not supported");
+					throw invalid_argument("private key file format is not supported");
 			}
 			fclose(fprv);
         } catch(...) {
@@ -634,11 +638,11 @@ namespace crypto {
         }
 
     }
-    void EC::save_public(const char *file_public_key_path, file_eckey_format public_key_format) {
+    void EC::save_public(const char *file_public_key_path, file_eckey_format public_key_format) const {
 
         // check if key exist
         if(eckey_public == NULL || evkey_public  == NULL) {
-            throw runtime_error("Key dose not exist");
+            throw runtime_error("key dose not exist");
         }
 
         // auto format detection option
@@ -649,23 +653,23 @@ namespace crypto {
         // create output file
         FILE *fpub = fopen(file_public_key_path, "w+");
         if(fpub == NULL) {
-            throw runtime_error("File could not be opened");
+            throw runtime_error("file could not be opened");
         }
         EC_KEY_set_asn1_flag(eckey_public , OPENSSL_EC_NAMED_CURVE);
         try {
 			switch(public_key_format) {
 				case PEM:
 					if(PEM_write_EC_PUBKEY(fpub, eckey_public) != 1) {
-						throw OpensslException("Writing key failed");
+						throw OpensslException("writing key failed");
 					}
 					break;
 				case DER:
 					if(i2d_EC_PUBKEY_fp(fpub, eckey_public) != 1) {
-						throw OpensslException("Writing key failed");
+						throw OpensslException("writing key failed");
 					}
 					break;
 				default:
-					throw invalid_argument("Private key file format is not supported");
+					throw invalid_argument("private key file format is not supported");
 			}
 			fclose(fpub);
         } catch(...) {
@@ -673,51 +677,138 @@ namespace crypto {
             throw;
         }
     }
-    const string EC::get_private(data_encoding format) {
+    const string EC::get_private(data_encoding format) const {
         
         // check if key exist
         if(eckey_private == NULL || evkey_private == NULL) {
-            throw runtime_error("Key dose not exist");
+            throw runtime_error("key dose not exist");
         }
         
         // convert key to bytes with SubjectPublicKeyInfo format
         size_t max_key_len = 256;
         unsigned char *bpkey_start = (unsigned char *)OPENSSL_malloc(max_key_len);
         if(bpkey_start == NULL) {
-			throw OpensslException("Failed to allocate bytes buffer");
+			throw OpensslException("failed to allocate bytes buffer");
         }
         unsigned char *bpkey_end = bpkey_start;
         int len = i2d_PrivateKey(evkey_private, &bpkey_end);
         if(len < 0) {
             OPENSSL_free(bpkey_start);
-			throw OpensslException("Failed to load key to bytes");
+			throw OpensslException("failed to load key to bytes");
         }
         const string &out = encoding(bpkey_start, len, format);
         OPENSSL_free(bpkey_start);
         return out;
     }
-    const string EC::get_public(data_encoding format) {
+    const string EC::get_public(data_encoding format) const {
         
         // check if key exist
         if(eckey_public == NULL || evkey_public == NULL) {
-            throw runtime_error("Key dose not exist");
+            throw runtime_error("key dose not exist");
         }
 
         // convert key to bytes with SubjectPublicKeyInfo format
         size_t max_key_len = 256;
         unsigned char *bpkey_start = (unsigned char *)OPENSSL_malloc(max_key_len);
         if(bpkey_start == NULL) {
-			throw OpensslException("Failed to allocate bytes buffer");
+			throw OpensslException("failed to allocate bytes buffer");
         }
         unsigned char *bpkey_end = bpkey_start;
         int len = i2d_PUBKEY(evkey_public, &bpkey_end);
         if(len < 0) {
             OPENSSL_free(bpkey_start);
-			throw OpensslException("Failed to load key to bytes");
+			throw OpensslException("failed to load key to bytes");
         }
         const string &out = encoding(bpkey_start, len, format);
         OPENSSL_free(bpkey_start);
         return out;
+    }
+
+    const string EC::get_public_point(public_key_point_format form, public_key_point_encoding output) const {
+
+        // check if key exist
+        if(eckey_public == NULL || evkey_public  == NULL) {
+            throw runtime_error("key dose not exist");
+        }
+
+    	const EC_POINT *ppoint = EC_KEY_get0_public_key(eckey_public);
+    	const EC_GROUP *group = EC_KEY_get0_group(eckey_public);
+    	point_conversion_form_t selected_form;
+    	switch(form) {
+			case COMPRESSED:
+				selected_form = POINT_CONVERSION_COMPRESSED;
+				break;
+			case UNCOMPRESSED:
+				selected_form = POINT_CONVERSION_UNCOMPRESSED;
+				break;
+			case HYBRID:
+				selected_form = POINT_CONVERSION_HYBRID;
+				break;
+    	}
+    	char *x = NULL;
+    	size_t length;
+    	switch(output) {
+			case HEX:
+		    	x = EC_POINT_point2hex(group, ppoint, selected_form, bnctx);
+		    	if(x == NULL) {
+		    		throw OpensslException("Conversion failed");
+		    	}
+				break;
+			case BINARY:
+				length = EC_POINT_point2buf(group, ppoint, selected_form, (unsigned char **)&x, bnctx);
+		    	if(length == 0) {
+		    		throw OpensslException("Conversion failed");
+		    	}
+				break;
+    	}
+    	string ret(x);
+    	OPENSSL_free(x);
+    	return ret;
+    }
+
+    void EC::set_public_by_point(const string &pkey, elliptic_curve curve, public_key_point_encoding input) {
+
+        // clear previous key
+        if(evkey_public) {
+            EVP_PKEY_free(evkey_private);
+            evkey_public = NULL;
+        }
+
+        if(! (eckey_public = EC_KEY_new_by_curve_name(getEllipticCurveNID(curve)))) {
+			throw OpensslException("elliptic curve is not recognize");
+        }
+    	const EC_GROUP *group = EC_KEY_get0_group(eckey_public);
+        EC_POINT *ppoint = EC_POINT_new(group);
+    	if(ppoint == NULL) {
+			throw OpensslException("failed to create point");
+    	}
+    	switch(input) {
+			case HEX:
+		    	if(! EC_POINT_hex2point(group, pkey.c_str(), ppoint, bnctx)) {
+		    		throw OpensslException("conversion failed");
+		    	}
+				break;
+			case BINARY:
+		    	if(EC_POINT_oct2point(group, ppoint, (const unsigned char *)pkey.c_str(), pkey.size(), bnctx) != 1) {
+		    		throw OpensslException("conversion failed");
+		    	}
+				break;
+    	}
+        if(EC_KEY_set_public_key(eckey_public, ppoint) != 1) {
+    		throw OpensslException("failed to assign point to key");
+        }
+
+		// check if key is valid
+		if(EC_KEY_check_key(eckey_public) != 1) {
+			throw runtime_error("key read was invalid");
+		}
+
+		if(! (evkey_public = EVP_PKEY_new()) ||
+				EVP_PKEY_assign_EC_KEY(evkey_public, eckey_public) != 1) {
+			throw OpensslException("building EVP key failed");
+		}
+
+        EC_POINT_free(ppoint);
     }
 
     void EC::generate_keys(elliptic_curve curve) {
@@ -728,22 +819,20 @@ namespace crypto {
         // generate key
         EC_KEY *key = NULL;
         if(! (key = EC_KEY_new_by_curve_name(getEllipticCurveNID(curve)))) {
-			throw OpensslException("Elliptic curve is not recognize");
+			throw OpensslException("elliptic curve is not recognize");
         }
         if(EC_KEY_generate_key(key) != 1) {
-			throw OpensslException("Failed to generate keys pair");
+			throw OpensslException("failed to generate keys pair");
         }
         EC_KEY_set_asn1_flag(key, OPENSSL_EC_NAMED_CURVE);
 
         // assign
 		eckey_private = key;
-		if(! (eckey_public = EC_KEY_new()) ||
-			! EC_KEY_copy(eckey_public, key) ||
-				! EC_KEY_copy(eckey_public, key) ||
-					! (evkey_private = EVP_PKEY_new()) ||
-						! (evkey_public = EVP_PKEY_new()) ||
-							EVP_PKEY_assign_EC_KEY(evkey_private, eckey_private) != 1 ||
-								EVP_PKEY_assign_EC_KEY(evkey_public, eckey_public) != 1) {
+		if(! (eckey_public = EC_KEY_dup(key)) ||
+				! (evkey_private = EVP_PKEY_new()) ||
+					! (evkey_public = EVP_PKEY_new()) ||
+						EVP_PKEY_assign_EC_KEY(evkey_private, eckey_private) != 1 ||
+							EVP_PKEY_assign_EC_KEY(evkey_public, eckey_public) != 1) {
 			EC_KEY_free(key);
 			eckey_private = NULL;
 			eckey_public = NULL;
@@ -752,15 +841,37 @@ namespace crypto {
             evkey_public = NULL;
             EVP_PKEY_free(evkey_private);
             evkey_private = NULL;
-			throw OpensslException("Failure occur when trying to assign keys");
+			throw OpensslException("failure occur when trying to assign keys");
 		}
     }
 
-    void EC::sign(hash_types hash, istream &data, ostream &signature) {
+    void EC::generate_public() {
+
+        // check if key exist
+        if(eckey_private == NULL || evkey_private == NULL) {
+            throw runtime_error("private key dose not exist");
+        }
+
+        // calculate
+    	const EC_GROUP *group = EC_KEY_get0_group(eckey_private);
+    	const BIGNUM *priv_key = EC_KEY_get0_private_key(eckey_private);
+    	EC_POINT *pub_key = EC_POINT_new(group);
+        if(EC_POINT_mul(group, pub_key, priv_key, NULL, NULL, bnctx) != 1) {
+			throw OpensslException("failed to do point multiplication");
+        }
+
+        // assign
+        if(EC_KEY_set_public_key(eckey_private, pub_key) != 1 ||
+        		! (eckey_public = EC_KEY_dup(eckey_private))) {
+			throw OpensslException("failed set public key");
+        }
+    }
+
+    void EC::sign(hash_types hash, istream &data, ostream &signature) const {
         
         // check if key exist
         if(eckey_private == NULL || evkey_private == NULL) {
-            throw runtime_error("Private key dose not exist");
+            throw runtime_error("private key dose not exist");
         }
 
         // hash algorithms to use
@@ -782,7 +893,7 @@ namespace crypto {
                 md = EVP_sha512();
                 break;
             default:
-                throw invalid_argument("Hash algorithm not supported");
+                throw invalid_argument("hash algorithm not supported");
         }
         
         // make signature
@@ -792,30 +903,30 @@ namespace crypto {
 		unsigned char *sig = NULL;
         try {
         	if(EVP_MD_CTX_reset(mdctx) != 1) {
-				throw OpensslException("Failed to initialize data required for this operation");
+				throw OpensslException("failed to initialize data required for this operation");
         	}
 
 			if(EVP_DigestSignInit(mdctx, NULL, md, NULL, evkey_private) != 1) {
-				throw OpensslException("Failed to initialize digest operation");
+				throw OpensslException("failed to initialize digest operation");
 			}
 
 			while(data) {
 				data.read(buffer, buffer_size);
 				if(EVP_DigestSignUpdate(mdctx, buffer, data.gcount()) != 1) {
-					throw OpensslException("Failed to make digest operation");
+					throw OpensslException("failed to make digest operation");
 				}
 			}
 
 			// signature size
 			if(EVP_DigestSignFinal(mdctx, NULL, &siglen) != 1) {
-				throw OpensslException("Failed to determine signature size");
+				throw OpensslException("failed to determine signature size");
 			}
 			sig = (unsigned char *)OPENSSL_malloc(siglen);
 			if(sig == NULL) {
-				throw OpensslException("Failed to allocate signature bytes buffer");
+				throw OpensslException("failed to allocate signature bytes buffer");
 			}
 			if(EVP_DigestSignFinal(mdctx, sig, &siglen) != 1) {
-				throw OpensslException("Failed to generate signature");
+				throw OpensslException("failed to generate signature");
 			}
 	        OPENSSL_free(sig);
         } catch(...) {
@@ -830,11 +941,11 @@ namespace crypto {
         signature.write((const char *)sig, siglen);
     }
 
-    bool EC::verify(hash_types hash, istream &data, istream &signature) {
+    bool EC::verify(hash_types hash, istream &data, istream &signature) const {
         
         // check if key exist
         if(eckey_public == NULL || evkey_public == NULL) {
-            throw runtime_error("Public key dose not exist");
+            throw runtime_error("public key dose not exist");
         }
 
         // hash algorithms to use
@@ -856,19 +967,19 @@ namespace crypto {
                 md = EVP_sha512();
                 break;
             default:
-                throw invalid_argument("Hash algorithm not supported");
+                throw invalid_argument("hash algorithm not supported");
         }
 
         // read signature
         signature.seekg(0, ios::end);
         size_t siglen = signature.tellg();
 		if(siglen == 0) {
-			throw OpensslException("Failed signature cannot be empty");
+			throw OpensslException("failed signature cannot be empty");
 		}
         signature.seekg(0, ios::beg);
         unsigned char *sig = (unsigned char *)OPENSSL_malloc(siglen);
 		if(sig == NULL) {
-			throw OpensslException("Failed to allocate signature bytes buffer");
+			throw OpensslException("failed to allocate signature bytes buffer");
 		}
         signature.read((char *) sig, siglen);
 
@@ -879,17 +990,17 @@ namespace crypto {
 
         try {
         	if(EVP_MD_CTX_reset(mdctx) != 1) {
-				throw OpensslException("Failed to initialize data required for this operation");
+				throw OpensslException("failed to initialize data required for this operation");
         	}
 
 			if(EVP_DigestVerifyInit(mdctx, NULL, md, NULL, evkey_public) != 1) {
-				throw OpensslException("Failed to initialize digest operation");
+				throw OpensslException("failed to initialize digest operation");
 			}
 
 			while(data) {
 				data.read(buffer, buffer_size);
 				if(EVP_DigestVerifyUpdate(mdctx, buffer, data.gcount()) != 1) {
-					throw OpensslException("Failed to make digest operation");
+					throw OpensslException("failed to make digest operation");
 				}
 			}
 

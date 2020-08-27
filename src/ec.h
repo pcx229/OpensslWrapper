@@ -223,9 +223,16 @@ namespace crypto {
     class EC {
 
         EVP_MD_CTX *mdctx = NULL;
+        BN_CTX *bnctx = NULL;
 
         EC_KEY *eckey_private = NULL, *eckey_public = NULL;
         EVP_PKEY *evkey_private = NULL, *evkey_public = NULL;
+
+        /**
+         * create a data container for functions used in this context
+         * @throw OpensslException
+         */
+        void buildContext();
 
         public:
 
@@ -248,12 +255,6 @@ namespace crypto {
         EC(const char *file_private_key_path, file_eckey_format private_key_format, const char *file_public_key_path=NULL, file_eckey_format public_key_format=AUTO);
 
         ~EC();
-
-        /**
-         * create a data container for functions used in this context
-         * @throw OpensslException
-         */
-        void buildContext();
 
         /**
          * remove private/public keys
@@ -298,6 +299,7 @@ namespace crypto {
 
         /**
          * load private and public keys.
+         * the format is SubjectPublicKeyInfo
          * @param private_key private key as base64 encoded string
          * @param public_key public key as base64 encoded string
          * @throw OpensslException, runtime_error
@@ -306,6 +308,7 @@ namespace crypto {
 
         /**
          * load private key.
+         * the format is SubjectPublicKeyInfo
          * @param private_key private key string
          * @param data_encoding private key string encoding
          * @throw OpensslException, runtime_error
@@ -314,6 +317,7 @@ namespace crypto {
 
         /**
          * load public key.
+         * the format is SubjectPublicKeyInfo
          * @param public_key public key string
          * @param data_encoding public key string encoding
          * @throw OpensslException, runtime_error
@@ -326,7 +330,7 @@ namespace crypto {
          * @param file_public_key_path file where public key will be saved to
          * @throw invalid_argument, OpensslException, runtime_error
 		 */
-        void save(const char *file_private_key_path, const char *file_public_key_path);
+        void save(const char *file_private_key_path, const char *file_public_key_path) const;
 
         /**
          * save private and public keys to files.
@@ -336,7 +340,7 @@ namespace crypto {
          * @param public_key_format public key output file format
          * @throw invalid_argument, OpensslException, runtime_error
 		 */
-        void save(const char *file_private_key_path, file_eckey_format private_key_format, const char *file_public_key_path, file_eckey_format public_key_format);
+        void save(const char *file_private_key_path, file_eckey_format private_key_format, const char *file_public_key_path, file_eckey_format public_key_format) const;
 
         /**
          * write private key to a file.
@@ -347,7 +351,7 @@ namespace crypto {
          * @param password paired with cipher_type parameter to use for encryption pass phase.
          * @throw invalid_argument, OpensslException, runtime_error
          */
-        void save_private(const char *file_private_key_path, file_eckey_format private_key_format=AUTO, cipher cipher_type=no_cipher, const char *password=NULL);
+        void save_private(const char *file_private_key_path, file_eckey_format private_key_format=AUTO, cipher cipher_type=no_cipher, const char *password=NULL) const;
 
         /**
          * write public key to a file.
@@ -355,29 +359,55 @@ namespace crypto {
          * @param public_key_format public key output file format, if not specified then do AUTO determination for desired format.
 		 * @throw invalid_argument, OpensslException, runtime_error
 		 */
-        void save_public(const char *file_public_key_path, file_eckey_format public_key_format=AUTO);
+        void save_public(const char *file_public_key_path, file_eckey_format public_key_format=AUTO) const;
 
         /**
          * get private key as a string.
+         * the format is SubjectPublicKeyInfo
          * @param format choose different encoding for key output
          * @return the private key as a string
          * @throw runtime_error, OpensslException
 		 */
-        const string get_private(data_encoding format=BASE64);
+        const string get_private(data_encoding format=BASE64) const;
 
         /**
          * get public key as a string.
+         * the format is SubjectPublicKeyInfo
          * @param format choose different encoding for key output
          * @return the public key as a string
          * @throw runtime_error, OpensslException
          */
-        const string get_public(data_encoding format=BASE64);
+        const string get_public(data_encoding format=BASE64) const;
+
+        enum public_key_point_format{ COMPRESSED, UNCOMPRESSED, HYBRID };
+        enum public_key_point_encoding{ HEX, BINARY };
+
+        /**
+         * get a point representation of the public key compressed or not.
+         * @param form in what form the point should be presented COMPRESSED, UNCOMPRESSED or HYBRID
+         * @param output encoding for the output string HEX or BINARY
+         * @return a string with the point
+         */
+        const string get_public_point(public_key_point_format form, public_key_point_encoding output=HEX) const;
+
+        /**
+         * set public key by a point.
+         * @param pkey the public key point string
+         * @param curve type of elliptic curve this key uses
+         * @param input encoding for the input string HEX or BINARY
+         */
+        void set_public_by_point(const string &pkey, elliptic_curve curve, public_key_point_encoding input=HEX);
 
         /**
          * generate private and public keys.
          * @param curve the elliptic curve to use for key generation
          */
         void generate_keys(elliptic_curve curve);
+
+        /**
+         * generate public key with the private key.
+         */
+        void generate_public();
 
         /**
          * create a signature for a data using the private key.
@@ -387,7 +417,7 @@ namespace crypto {
          * @param signature output parameter for the result signature
          * @throw invalid_argument, OpensslException, runtime_error
          */
-        void sign(hash_types hash, istream &data, ostream &signature);
+        void sign(hash_types hash, istream &data, ostream &signature) const;
 
         /**
          * verify data with a given signature using the public key.
@@ -397,7 +427,7 @@ namespace crypto {
          * @return true if the signature was generated from the data
          * @throw invalid_argument, OpensslException, runtime_error
          */
-        bool verify(hash_types hash, istream &data, istream &signature);
+        bool verify(hash_types hash, istream &data, istream &signature) const;
 
     };
 
