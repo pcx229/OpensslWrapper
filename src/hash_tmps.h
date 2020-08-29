@@ -1,4 +1,6 @@
 
+#include "hash.h"
+
 namespace crypto {
 
 	template <hash_types type>
@@ -112,6 +114,13 @@ namespace crypto {
     template <hash_types type>
     Hash<type>::operator string() const {
         return const_cast<Hash<type>*>(this)->digest();
+    }
+
+    template <hash_types type>
+    bool Hash<type>::operator==(const string &str) {
+    	string lowers(str.size(), '#');
+    	transform(str.begin(), str.end(), lowers.begin(), ::tolower);
+    	return string(*this) == lowers;
     }
 
     template <hash_types type>

@@ -7,7 +7,7 @@ using namespace std;
 #include "ec.h"
 using namespace crypto;
 
-void test_ec()
+int main()
 {
     EC e;
     string pkey;
@@ -85,4 +85,6 @@ void test_ec()
     } catch(const exception &e) {
     	cerr << e.what();
     }
+
+    return 0;
 }

@@ -7,7 +7,7 @@ using namespace std;
 #include "hash.h"
 using namespace crypto;
 
-void test_hash()
+int main()
 {
     // string
 
@@ -65,4 +65,6 @@ void test_hash()
 
     string hex_hash_hello_world = Hash<sha256>("hello world");
     cout << "hash of 'hello world': " << hex_hash_hello_world << endl;
+
+    return 0;
 }

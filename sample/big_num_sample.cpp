@@ -6,7 +6,7 @@ using namespace std;
 #include "big_num.h"
 using namespace crypto;
 
-void test_big_num() {
+int main() {
 
 	BigNum a;
 
@@ -86,4 +86,5 @@ void test_big_num() {
 	cout << endl;
 	cout << "'a' as decimal with operator << ? " << a << endl;
 
+	return 0;
 }

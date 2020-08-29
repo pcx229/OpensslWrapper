@@ -2,6 +2,7 @@
 #ifndef _CRYPTO_HASH_H_
 #define _CRYPTO_HASH_H_
 
+#include <algorithm>
 #include <iostream>
 using namespace std;
 
@@ -150,10 +151,19 @@ namespace crypto {
         string digest(data_encoding enc=HEX);
 
         /**
+         * get the digest string as a hex
          * ending the hashing progress, see call to digest()
-         * @return the result digest value of this hash
+         * @return a hex encoded string of the current digest value
          */
         operator string() const;
+
+        /**
+         * compare this digest result hex string to the other string
+         * ending the hashing progress
+         * @param str hash digest hex string to compare with
+         * @return true if this hash equals to the string given
+         */
+        bool operator==(const string &str);
     };
 }
 

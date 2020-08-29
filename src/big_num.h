@@ -1,9 +1,11 @@
 #ifndef BIGNUM_H_
 #define BIGNUM_H_
 
-#include <openssl/bn.h>
 #include <iostream>
 using namespace std;
+
+#include <openssl/bn.h>
+#include <openssl/crypto.h>
 
 #include "openssl_exception.h"
 
@@ -54,7 +56,7 @@ namespace crypto {
 
 		// comparison
 
-		int compare(const BigNum &a, const BigNum& b) const;
+		int compare(const BigNum& v) const;
 		bool operator<(const BigNum& b) const;
 		bool operator>(const BigNum& b) const;
 		bool operator==(const BigNum& b) const;

@@ -36,11 +36,6 @@ namespace crypto {
 		if(data.size() % 2 != 0) {
 			throw invalid_argument("size indicate that this is not a hex string");
 		}
-		for(size_t i=0;i<data.size();i++) {
-			if(charset2value[(unsigned int)data[i]] == 17) {
-				throw invalid_argument("string characters are not one in a valid hex format");
-			}
-		}
 		// build
 		stringstream ss;
 		for (unsigned int i = 0; i < data.size(); i+=2) {

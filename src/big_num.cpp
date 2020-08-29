@@ -78,20 +78,20 @@ namespace crypto {
 		}
 		return *this;
 	}
-	int BigNum::compare(const BigNum &a, const BigNum& b) const {
-		return BN_cmp(a.n, b.n);
+	int BigNum::compare(const BigNum& v) const {
+		return BN_cmp(n, v.n);
 	}
 	bool BigNum::operator<(const BigNum& b) const {
-		return compare(*this, b) < 0;
+		return compare(b) < 0;
 	}
 	bool BigNum::operator>(const BigNum& b) const {
-		return compare(*this, b) > 0;
+		return compare(b) > 0;
 	}
 	bool BigNum::operator==(const BigNum& b) const {
-		return compare(*this, b) == 0;
+		return compare(b) == 0;
 	}
 	bool BigNum::operator!=(const BigNum& b) const {
-		return compare(*this, b) != 0;
+		return compare(b) != 0;
 	}
 	void BigNum::div(const BigNum& a, const BigNum& b, BigNum& div, BigNum& remainder) const {
 		BN_div(div.n, remainder.n, a.n, b.n, ctx);
