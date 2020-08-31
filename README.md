@@ -10,6 +10,7 @@ built on openssl version 1.1.1 and c++ version 11
 
 download openssl developers edition for MinGW to the version of windows you have from here:  
 https://slproweb.com/products/Win32OpenSSL.html  
+`note:` this version of openssl require linking .lib files, with MinGW64 i had issus trying to link this type of file so the project was built on the base MinGW version.  
 
 #### using newer version of openssl:
 
