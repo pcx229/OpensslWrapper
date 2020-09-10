@@ -5,12 +5,14 @@
 using namespace std;
 
 #include "ec.h"
+#include "encoder/base64.h"
 using namespace crypto;
 
 int main()
 {
     EC e;
     string pkey;
+    Base64 encoder;
 
     try {
 
@@ -19,8 +21,8 @@ int main()
 		cout << endl << "- Generating keys:" << endl;
 
 		e.generate_keys(secp256k1);
-		cout << "private key:\t" << e.get_private() << endl;
-		cout << "public key:\t" << e.get_public() << endl;
+		cout << "private key:\t" << e.get_private_ANS1() << endl;
+		cout << "public key:\t" << e.get_public_ANS1() << endl;
 
 		// save with a key
 
@@ -31,15 +33,14 @@ int main()
 
 		// load key files
 
-		cout << endl << "- Loading keys from files private.pem and public.pem" << endl;
+		cout << endl << "- Loading keys from files private.pem" << endl;
 
 		e.load_private("private.pem", AUTO, "hello");
-		e.load_public("public.pem");
 
 		// sign and verify data
 
 		stringstream sdata;
-		sdata << endl << "hello world";
+		sdata << "hello world";
 
 		// sign
 
@@ -47,7 +48,7 @@ int main()
 
 		stringstream signature;
 		e.sign(sha1, sdata, signature);
-		cout << "data: '" + sdata.str() + "' , signature: " << Base64::Encode((const unsigned char *)signature.str().c_str(), signature.str().size()) << endl;
+		cout << "data: '" + sdata.str() + "' , signature: " << encoder.Encode((const unsigned char *)signature.str().c_str(), signature.str().size()) << endl;
 
 		// verify
 
@@ -61,26 +62,24 @@ int main()
 
 		cout << endl << "- public key as a point" << endl;
 		e.generate_keys(secp256k1);
-		cout << "original public key: " << e.get_public() << endl;
-		pkey = e.get_public_point(EC::public_key_point_format::COMPRESSED, EC::public_key_point_encoding::HEX);
+		cout << "original public key: " << e.get_public_ANS1() << endl;
+		pkey = e.get_public_point(EC::public_key_point_format::COMPRESSED, HEX);
 		cout << "public key as compressed string: " << pkey << endl;
 		e.clear();
 		cout << "keys are cleared and setting public key by point" << endl;
-		e.set_public_by_point(pkey, secp256k1 ,EC::public_key_point_encoding::HEX);
-		cout << "recovered public key: " << e.get_public() << endl;
+		e.load_public_by_point(pkey, secp256k1 ,HEX);
+		cout << "recovered public key: " << e.get_public_ANS1() << endl;
 
 		// generating public key by a private key
 
 		cout << endl << "- public key by a private key" << endl;
 		e.generate_keys(secp256k1);
-		cout << "original public key: " << e.get_private() << endl;
-		pkey = e.get_private();
+		cout << "original public key: " << e.get_private_ANS1() << endl;
+		pkey = e.get_private_ANS1();
 		e.clear();
 		cout << "keys are cleared and loading private key" << endl;
-		e.load_private(pkey);
-		cout << "generating public key" << endl;
-		e.generate_public();
-		cout << "original public key: " << e.get_private() << endl;
+		e.load_private_by_ANS1(pkey);
+		cout << "recovered public key: " << e.get_private_ANS1() << endl;
 
     } catch(const exception &e) {
     	cerr << e.what();

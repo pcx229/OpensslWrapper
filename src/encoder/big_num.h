@@ -7,7 +7,8 @@ using namespace std;
 #include <openssl/bn.h>
 #include <openssl/crypto.h>
 
-#include "openssl_exception.h"
+#include "../openssl_exception.h"
+#include "../shared_context.h"
 
 namespace crypto {
 
@@ -20,7 +21,11 @@ namespace crypto {
 	class BigNum {
 
 		BIGNUM *n = NULL;
+		#ifdef SHARED_CONTEXT
+		BN_SHARED_CONTEXT ctx;
+		#else
 		BN_CTX *ctx = NULL;
+		#endif
 
 		/**
 		 * dynamically allocate data required
@@ -52,7 +57,7 @@ namespace crypto {
 		 * smaller then the maximum value of long long, otherwise
 		 * return value will have unexpected results.
 		 */
-		long long operator*() const;
+		long operator*() const;
 
 		// comparison
 

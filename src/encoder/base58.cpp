@@ -10,7 +10,13 @@ namespace crypto {
 		}
 	}
 
-	string Base58::Encode(const unsigned char *data, size_t length) {
+	Base58::~Base58() {}
+
+	bytes Base58::Encode(const bytes& data) {
+		return Encode((const unsigned char *)data.c_str(), data.size());
+	}
+
+	bytes Base58::Encode(const unsigned char *data, size_t length) {
 		static const char value2charset[] = {
 			'1', '2', '3', '4', '5', '6', '7', '8',
 			'9', 'A', 'B', 'C', 'D', 'E', 'F', 'G',
@@ -31,7 +37,7 @@ namespace crypto {
 			}
 		}
 		BigNum n(data, length, BigNum::BINARY_BIG_ENDIAN);
-		stringstream reversed_base58;
+		bytesstream reversed_base58;
 		while(n > 0) {
 			BigNum d, r;
 			n.div(n, 58, d, r);
@@ -47,7 +53,7 @@ namespace crypto {
 		return base58;
 	}
 
-	string Base58::Decode(const string& data) {
+	bytes Base58::Decode(const bytes& data) {
 		static const char charset2value[] = {
 			58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58,
 			58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58,
@@ -66,7 +72,7 @@ namespace crypto {
 			58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58, 58
 		};
 		BigNum n = 0;
-		stringstream ss;
+		bytesstream ss;
 		string::const_iterator it = data.begin(), end = data.end();
 		// add leading zeros
 		while(it != end) {

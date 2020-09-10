@@ -3,7 +3,13 @@
 
 namespace crypto {
 
-	string Base64::Encode(const unsigned char *data, size_t length) {
+	Base64::~Base64() {}
+
+	bytes Base64::Encode(const bytes& data) {
+		return Encode((const unsigned char *)data.c_str(), data.size());
+	}
+
+	bytes Base64::Encode(const unsigned char *data, size_t length) {
 		static const char value2charset[] = {
 			'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
 			'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -15,7 +21,7 @@ namespace crypto {
 			'4', '5', '6', '7', '8', '9', '+', '/'
 		};
 		// build
-		stringstream ss;
+		bytesstream ss;
 		for(size_t i=0;i<length/3*3;i+=3) {
 			ss << value2charset[data[i] >> 2]
 				<< value2charset[(data[i] & (char)0x03) << 4 | data[i+1] >> 4]
@@ -36,7 +42,7 @@ namespace crypto {
 		return ss.str();
 	}
 
-	string Base64::Decode(const string& data) {
+	bytes Base64::Decode(const bytes& data) {
 		static const char charset2value[] = {
 			64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
 			64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
@@ -65,7 +71,7 @@ namespace crypto {
 			}
 		}
 		// build
-		stringstream ss;
+		bytesstream ss;
 		for(size_t i=0;i<data.size();i+=4) {
 			char a = charset2value[(unsigned int)data[i]],
 					b = charset2value[(unsigned int)data[i+1]],

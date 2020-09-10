@@ -5,7 +5,9 @@ namespace crypto {
 
 	void BigNum::init() {
 		n = BN_new();
+		#ifndef SHARED_CONTEXT
 		ctx = BN_CTX_new();
+		#endif
 		if(!n || !ctx) {
 			throw OpensslException("failed to initialize data");
 		}
@@ -49,12 +51,12 @@ namespace crypto {
 		init();
 		switch(input) {
 			case HEX:
-				if(BN_hex2bn(&n, str) < 0) {
+				if(BN_hex2bn(&n, str) == 0) {
 					throw OpensslException("failed to assign value");
 				}
 				break;
 			case DEC:
-				if(BN_dec2bn(&n, str) < 0) {
+				if(BN_dec2bn(&n, str) == 0) {
 					throw OpensslException("failed to assign value");
 				}
 				break;
@@ -70,7 +72,9 @@ namespace crypto {
 	}
 	BigNum::~BigNum() {
 		BN_free(n);
+		#ifndef SHARED_CONTEXT
 		BN_CTX_free(ctx);
+		#endif
 	}
 	BigNum &BigNum::operator=(const BigNum& b) {
 		if(! BN_copy(n, b.n)) {
@@ -96,7 +100,7 @@ namespace crypto {
 	void BigNum::div(const BigNum& a, const BigNum& b, BigNum& div, BigNum& remainder) const {
 		BN_div(div.n, remainder.n, a.n, b.n, ctx);
 	}
-	long long BigNum::operator*() const {
+	long BigNum::operator*() const {
 		return BN_get_word(n) * (BN_is_negative(n) ? -1 : 1);
 	}
 	BigNum BigNum::operator/(const BigNum& b) const {
@@ -137,6 +141,10 @@ namespace crypto {
 			case HEX:
 				{
 					char *hex = BN_bn2hex(n);
+					if(hex == NULL) {
+						OPENSSL_free(hex);
+						throw OpensslException("conversion failed");
+			        }
 					os << hex;
 					OPENSSL_free(hex);
 				}
@@ -144,6 +152,10 @@ namespace crypto {
 			case DEC:
 				{
 					char *dec = BN_bn2dec(n);
+					if(dec == NULL) {
+						OPENSSL_free(dec);
+						throw OpensslException("conversion failed");
+			        }
 					os << dec;
 					OPENSSL_free(dec);
 				}
@@ -152,8 +164,11 @@ namespace crypto {
 				{
 					int nbytes = BN_num_bytes(n);
 					unsigned char *data = (unsigned char *)OPENSSL_malloc(nbytes);
-					BN_bn2lebinpad(n, data, nbytes);
-					os.write((const char *)data, nbytes);
+					if(BN_bn2lebinpad(n, data, nbytes) < 0) {
+						OPENSSL_free(data);
+						throw OpensslException("conversion failed");
+			        }
+					os.write((char *)data, nbytes);
 					OPENSSL_free(data);
 				}
 				break;
@@ -161,8 +176,11 @@ namespace crypto {
 				{
 					int nbytes = BN_num_bytes(n);
 					unsigned char *data = (unsigned char *)OPENSSL_malloc(nbytes);
-					BN_bn2binpad(n, data, nbytes);
-					os.write((const char *)data, nbytes);
+					if(BN_bn2binpad(n, data, nbytes) < 0) {
+						OPENSSL_free(data);
+						throw OpensslException("conversion failed");
+			        }
+					os.write((char *)data, nbytes);
 					OPENSSL_free(data);
 				}
 				break;

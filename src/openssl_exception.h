@@ -38,4 +38,4 @@ public:
 	void printExtendedInformation(ostream &os=cerr) const;
 };
 
-#endif /* OPENSSLEXCEPTION_H_ */
+#endif

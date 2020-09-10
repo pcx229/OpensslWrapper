@@ -3,7 +3,7 @@
 #include <iostream>
 using namespace std;
 
-#include "big_num.h"
+#include "encoder/big_num.h"
 using namespace crypto;
 
 #include <gtest/gtest.h>
@@ -22,11 +22,11 @@ TEST(BigNum, Constructor) {
 
 	// string decimal
 
-	ASSERT_EQ(*BigNum("435436456546"), 435436456546);
+	ASSERT_EQ(*BigNum("435436456"), 435436456);
 
 	// string hex
 
-	ASSERT_EQ(*BigNum("ff324af345", BigNum::encoding::HEX), 1096060433221);
+	ASSERT_EQ(*BigNum("ff324a", BigNum::encoding::HEX), 16724554);
 
 	// binary little endian
 
@@ -39,7 +39,6 @@ TEST(BigNum, Constructor) {
 	ASSERT_EQ(*BigNum(reinterpret_cast<unsigned char *>(&b), sizeof(unsigned int)), 42);
 
 	// copy
-
 	BigNum ca = 5;
 	BigNum cb = ca;
 	ASSERT_EQ(*ca, *cb);

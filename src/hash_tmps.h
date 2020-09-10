@@ -11,11 +11,16 @@ namespace crypto {
             throw invalid_argument("unknown message digest hash type");
         }
 
+		#ifndef SHARED_CONTEXT
         mdctx = EVP_MD_CTX_create();
         if(!mdctx) {
         	throw OpensslException("failed to create MD context");
         }
+		#endif
 
+		#ifdef SHARED_CONTEXT
+        mdctx.lock();
+		#endif
         if(EVP_DigestInit_ex(mdctx, md, NULL) != 1) {
         	throw OpensslException("failed to initialize hash algorithm");
         }
@@ -27,15 +32,15 @@ namespace crypto {
     }
 
     template <hash_types type>
-    Hash<type>::Hash(const string &data) {
+    Hash<type>::Hash(const string &data, encoders_name input) {
         init();
-        update(data);
+        update(data, input);
     }
 
     template <hash_types type>
-    Hash<type>::Hash(istream &data) {
+    Hash<type>::Hash(istream &data, encoders_name input) {
         init();
-        update(data);
+        update(data, input);
     }
 
     template <hash_types type>
@@ -45,16 +50,24 @@ namespace crypto {
 
     template <hash_types type>
     Hash<type>::~Hash() {
+		#ifdef SHARED_CONTEXT
+        mdctx.unlock();
+		#else
         if(mdctx != NULL) {
             EVP_MD_CTX_destroy(mdctx);
         }
+		#endif
     }
 
     template <hash_types type>
     Hash<type> &Hash<type>::operator=(const Hash<type> &other) {
+		#ifdef SHARED_CONTEXT
+    	mdctx = other.mdctx;
+		#else
         if(EVP_MD_CTX_copy(mdctx, other.mdctx) != 1) {
         	throw OpensslException("failed to copy source hash to destination hash");
         }
+		#endif
         if(other.is_over) {
             is_over = true;
             strncpy((char*)md_value, (const char*)other.md_value, other.md_len);
@@ -64,11 +77,12 @@ namespace crypto {
     }
 
     template <hash_types type>
-    Hash<type> &Hash<type>::update(const string &data) {
+    Hash<type> &Hash<type>::update(const string &data, encoders_name input) {
         if(is_over) {
             throw logic_error("cannot make updates after digest operation");
         }
-        if(EVP_DigestUpdate(mdctx, data.c_str(), data.size()) != 1) {
+        const string &dec = decoding(data, input);
+        if(EVP_DigestUpdate(mdctx, dec.c_str(), dec.size()) != 1) {
         	throw OpensslException("failed make hash digest operation");
         }
         return *this;
@@ -80,7 +94,7 @@ namespace crypto {
     }
 
     template <hash_types type>
-    Hash<type> &Hash<type>::update(istream &data) {
+    Hash<type> &Hash<type>::update(istream &data, encoders_name input) {
         if(is_over) {
             throw logic_error("cannot make updates after digest operation");
         }
@@ -88,7 +102,8 @@ namespace crypto {
         char buffer[buffer_size];
         while(data) {
             data.read(buffer, buffer_size);
-            if(EVP_DigestUpdate(mdctx, buffer, data.gcount()) != 1) {
+            const string &dec = decoding((unsigned char *)buffer, data.gcount(), input);
+            if(EVP_DigestUpdate(mdctx, dec.c_str(), dec.size()) != 1) {
             	throw OpensslException("failed make hash digest operation");
             }
         }
@@ -101,12 +116,15 @@ namespace crypto {
     }
 
     template <hash_types type>
-    string Hash<type>::digest(data_encoding enc) {
+    string Hash<type>::digest(encoders_name enc) {
         if(!is_over) {
             if(EVP_DigestFinal_ex(mdctx, md_value, &md_len) != 1) {
             	throw OpensslException("failed to generate hash");
             }
             is_over = true;
+			#ifdef SHARED_CONTEXT
+            mdctx.unlock();
+			#endif
         }
         return encoding(md_value, md_len, enc);
     }

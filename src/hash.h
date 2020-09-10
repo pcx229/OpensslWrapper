@@ -15,7 +15,7 @@ using namespace std;
 
 #include <openssl/evp.h>
 
-#include "encoding.h"
+#include "encoder/encoding_factory.h"
 #include "openssl_exception.h"
 
 namespace crypto {
@@ -64,7 +64,11 @@ namespace crypto {
     template <hash_types type>
     class Hash {
 
+		#ifdef SHARED_CONTEXT
+    	EVP_MD_SHARED_CONTEXT mdctx;
+		#else
         EVP_MD_CTX *mdctx = NULL;
+		#endif
 
         unsigned char md_value[EVP_MAX_MD_SIZE];
         unsigned int md_len = EVP_MAX_MD_SIZE;
@@ -83,14 +87,15 @@ namespace crypto {
         /**
          * the hash will be initialized and then updated with the string given
          * @param data hash the bytes in this string
+         * @input the data encoding
          */
-        Hash(const string &data);
+        Hash(const string &data, encoders_name input=BINARY);
 
         /**
          * the hash will be initialized and then updated with the stream given
          * @param data hash the bytes in this stream
          */
-        Hash(istream &data);
+        Hash(istream &data, encoders_name input=BINARY);
 
         /**
          * same as = operator
@@ -113,9 +118,10 @@ namespace crypto {
          * continue hashing with bytes from the string given, this function can
          * be called multiple times.
          * @param data string to put in the hash
+         * @input the data encoding
          * @return this hash
          */
-        Hash &update(const string &data);
+        Hash &update(const string &data, encoders_name input=BINARY);
 
         /**
          * same as update() only with an operator
@@ -128,9 +134,10 @@ namespace crypto {
          * continue hashing with bytes from the stream given, this function can
          * be called multiple times.
          * @param data stream to put in the hash
+         * @input the data encoding
          * @return this hash
          */
-        Hash &update(istream &data);
+        Hash &update(istream &data, encoders_name input=BINARY);
 
         /**
          * same as update() only with an operator
@@ -148,7 +155,7 @@ namespace crypto {
          * @param enc output encoding of the digest value, HEX is default
          * @return result digest value
          */
-        string digest(data_encoding enc=HEX);
+        string digest(encoders_name enc=HEX);
 
         /**
          * get the digest string as a hex

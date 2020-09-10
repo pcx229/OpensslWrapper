@@ -56,7 +56,7 @@ TEST(Hash, CopyState) {
 	h2 = h1;
 	ASSERT_TRUE(h1 == "5d41402abc4b2a76b9719d911017c592");
 	h2 << " world";
-	ASSERT_TRUE(h2 == "5eb63bbbe01eeed093cb22bb8f5acdc3");
+	ASSERT_TRUE(h2 == "5eb63bbbe01eeed093cb22bb8f5acdc3") << " " << h2;
 }
 
 TEST(Hash, Output) {

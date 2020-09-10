@@ -15,10 +15,8 @@ using namespace std;
 #include <openssl/evp.h>
 
 #include "hash.h"
-using namespace crypto;
-
 #include "openssl_exception.h"
-
+#include "encoder/encoding_factory.h"
 
 namespace crypto {
     
@@ -183,11 +181,18 @@ namespace crypto {
      */
     class EC {
 
+		#ifndef SHARED_CONTEXT
         EVP_MD_CTX *mdctx = NULL;
         BN_CTX *bnctx = NULL;
+		#else
+    	EVP_MD_SHARED_CONTEXT mdctx;
+    	BN_SHARED_CONTEXT bnctx;
+		#endif
 
-        EC_KEY *eckey_private = NULL, *eckey_public = NULL;
-        EVP_PKEY *evkey_private = NULL, *evkey_public = NULL;
+    	// EC_KEY must hold a public key or a pair of public and private key.
+    	EC_KEY *eckey = NULL;
+    	EVP_PKEY *evkey = NULL;
+    	bool has_private = false, has_public = false;
 
         /**
          * create a data container for functions used in this context
@@ -198,22 +203,15 @@ namespace crypto {
         public:
 
         /**
-         * load private and public keys, AUTO detect file format.
-         * @param file_private_key_path private key file path
-         * @param file_public_key_path public key file path
-         * @throw invalid_argument, OpensslException, runtime_error
-         */
-        EC(const char *file_private_key_path=NULL, const char *file_public_key_path=NULL);
-
-        /**
-         * load private and public keys.
+         * load key pair
          * @param file_private_key_path private key file path
          * @param private_key_format private key file format
-         * @param file_public_key_path public key file path
-         * @param public_key_format public key file format
          * @throw invalid_argument, OpensslException, runtime_error
          */
-        EC(const char *file_private_key_path, file_eckey_format private_key_format, const char *file_public_key_path=NULL, file_eckey_format public_key_format=AUTO);
+        EC(const char *file_private_key_path=NULL, file_eckey_format private_key_format=AUTO);
+
+        EC(const EC &other) = delete;
+        EC& operator=(const EC &other) = delete;
 
         ~EC();
 
@@ -223,25 +221,8 @@ namespace crypto {
         void clear();
 
         /**
-         * load private and public keys, AUTO detect file format.
-         * @param file_private_key_path private key file path
-         * @param file_public_key_path public key file path
-         * @throw invalid_argument, OpensslException, runtime_error
-         */
-        void load(const char *file_private_key_path, const char *file_public_key_path);
-
-        /**
-         * load private and public keys.
-         * @param file_private_key_path private key file path
-         * @param private_key_format private key file format
-         * @param file_public_key_path public key file path
-         * @param public_key_format public key file format
-         * @throw invalid_argument, OpensslException, runtime_error
-         */
-        void load(const char *file_private_key_path, file_eckey_format private_key_format, const char *file_public_key_path, file_eckey_format public_key_format);
-
-        /**
-         * load private key, clear any previous key pair.
+         * load key pair, contains both private and public parts.
+         * discard any active key pair
          * @param file_private_key_path private key file path
          * @param private_key_format private key file format
          * @password required only if the file is encrypted
@@ -250,8 +231,8 @@ namespace crypto {
         void load_private(const char *file_private_key_path, file_eckey_format private_key_format=AUTO, const char *password=NULL);
 
         /**
-         * load public key, any previous public key is discarded.
-         * note: public key is not tested if it match the private part.
+         * load public key
+         * discard any active key pair
          * @param file_public_key_path public key file path
          * @param public_key_format public key file format
          * @throw invalid_argument, OpensslException, runtime_error
@@ -259,31 +240,42 @@ namespace crypto {
         void load_public(const char *file_public_key_path, file_eckey_format public_key_format=AUTO);
 
         /**
-         * load private and public keys.
-         * the format is SubjectPublicKeyInfo
-         * @param private_key private key as base64 encoded string
-         * @param public_key public key as base64 encoded string
-         * @throw OpensslException, runtime_error
-         */
-        void load(const string &private_key, const string &public_key);
-
-        /**
          * load private key.
-         * the format is SubjectPublicKeyInfo
+         * the format is ASN.1 DER
+         * discard any active key pair
          * @param private_key private key string
          * @param data_encoding private key string encoding
          * @throw OpensslException, runtime_error
          */
-        void load_private(const string &private_key, data_encoding format=BASE64);
+        void load_private_by_ANS1(const string &private_key, encoders_name format=BASE64);
 
         /**
          * load public key.
-         * the format is SubjectPublicKeyInfo
+         * the format is ASN.1 DER
+         * discard any active key pair
          * @param public_key public key string
          * @param data_encoding public key string encoding
          * @throw OpensslException, runtime_error
          */
-        void load_public(const string &public_key, data_encoding format=BASE64);
+        void load_public_by_ANS1(const string &public_key, encoders_name format=BASE64);
+
+        /**
+         * load key pair by the private key number used for generating the elliptic curve encryption.
+         * discard any active key pair
+         * @param private_key_number the number used for generating, in the standard generation method this part is random
+         * @param curve type of elliptic curve this key uses
+         * @param input encoding for the input string HEX or BINARY
+         */
+        void load_private_by_number(const string &private_key_number, elliptic_curve curve, encoders_name input=HEX);
+
+        /**
+         * load public key by a point on the elliptic curve.
+         * discard any active key pair
+         * @param public_key_point the public key point as a string
+         * @param curve type of elliptic curve this key uses
+         * @param input encoding for the input string HEX or BINARY
+         */
+        void load_public_by_point(const string &public_key_point, elliptic_curve curve, encoders_name input=HEX);
 
         /**
          * save private and public keys to files.
@@ -324,24 +316,32 @@ namespace crypto {
 
         /**
          * get private key as a string.
-         * the format is SubjectPublicKeyInfo
+         * the format is ASN.1 DER
          * @param format choose different encoding for key output
          * @return the private key as a string
          * @throw runtime_error, OpensslException
 		 */
-        const string get_private(data_encoding format=BASE64) const;
+        const string get_private_ANS1(encoders_name format=BASE64) const;
+
+        /**
+         * get private key as a string.
+         * the key is the random number used to generate the encryption
+         * @param format choose different encoding for key output
+         * @return the private key as a string
+         * @throw runtime_error, OpensslException
+		 */
+        const string get_private_number(encoders_name format) const;
 
         /**
          * get public key as a string.
-         * the format is SubjectPublicKeyInfo
+         * the format is ANS.1 DER
          * @param format choose different encoding for key output
          * @return the public key as a string
          * @throw runtime_error, OpensslException
          */
-        const string get_public(data_encoding format=BASE64) const;
+        const string get_public_ANS1(encoders_name format=BASE64) const;
 
         enum public_key_point_format{ COMPRESSED, UNCOMPRESSED, HYBRID };
-        enum public_key_point_encoding{ HEX, BINARY };
 
         /**
          * get a point representation of the public key compressed or not.
@@ -349,26 +349,13 @@ namespace crypto {
          * @param output encoding for the output string HEX or BINARY
          * @return a string with the point
          */
-        const string get_public_point(public_key_point_format form, public_key_point_encoding output=HEX) const;
+        const string get_public_point(public_key_point_format form, encoders_name output=HEX) const;
 
         /**
-         * set public key by a point.
-         * @param pkey the public key point string
-         * @param curve type of elliptic curve this key uses
-         * @param input encoding for the input string HEX or BINARY
-         */
-        void set_public_by_point(const string &pkey, elliptic_curve curve, public_key_point_encoding input=HEX);
-
-        /**
-         * generate private and public keys.
+         * generate a key pair
          * @param curve the elliptic curve to use for key generation
          */
         void generate_keys(elliptic_curve curve);
-
-        /**
-         * generate public key with the private key.
-         */
-        void generate_public();
 
         /**
          * create a signature for a data using the private key.

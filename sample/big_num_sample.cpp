@@ -3,7 +3,7 @@
 #include <iostream>
 using namespace std;
 
-#include "big_num.h"
+#include "encoder/big_num.h"
 using namespace crypto;
 
 int main() {

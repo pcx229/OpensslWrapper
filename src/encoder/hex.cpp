@@ -3,9 +3,15 @@
 
 namespace crypto {
 
-	string Hex::Encode(const unsigned char *data, size_t length) {
+	Hex::~Hex() {}
+
+	bytes Hex::Encode(const bytes& data) {
+		return Encode((const unsigned char *)data.c_str(), data.size());
+	}
+
+	bytes Hex::Encode(const unsigned char *data, size_t length) {
 		// build
-		stringstream ss;
+		bytesstream ss;
 		for (unsigned int i = 0; i < length; i++)
 		{
 			ss << std::hex << setw(2) << setfill('0') << (int)data[i];
@@ -13,7 +19,7 @@ namespace crypto {
 		return ss.str();
 	}
 
-	string Hex::Decode(const string& data) {
+	bytes Hex::Decode(const string& data) {
 		static const char charset2value[] = {
 			17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
 			17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
@@ -37,7 +43,7 @@ namespace crypto {
 			throw invalid_argument("size indicate that this is not a hex string");
 		}
 		// build
-		stringstream ss;
+		bytesstream ss;
 		for (unsigned int i = 0; i < data.size(); i+=2) {
 			ss << (char)(charset2value[(unsigned int)data[i]] * 16 + charset2value[(unsigned int)data[i+1]]);
 		}
