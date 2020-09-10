@@ -8,15 +8,13 @@ built on openssl version 1.1.1 and c++ version 11
 
 ## Windows MinGW
 
-<<<<<<< HEAD
 the project was built with MinGW64 POSIX 32bit and openssl 1.1.1 32bit from here:  
 https://bintray.com/vszakats/generic/openssl  
 `note:` MinGW64 is essential since use of C++11 POSIX threads is required.  
-=======
+
 download openssl developers edition for MinGW to the version of windows you have from here:  
 https://slproweb.com/products/Win32OpenSSL.html  
 `note:` this version of openssl require linking .lib files, with MinGW64 i had issus trying to link this type of file so the project was built on the base MinGW version.  
->>>>>>> refs/remotes/origin/master
 
 #### using newer version of openssl:
 
