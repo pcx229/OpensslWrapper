@@ -12,10 +12,6 @@ the project was built with MinGW64 POSIX 32bit and openssl 1.1.1 32bit from here
 https://bintray.com/vszakats/generic/openssl  
 `note:` MinGW64 is essential since use of C++11 POSIX threads is required.  
 
-download openssl developers edition for MinGW to the version of windows you have from here:  
-https://slproweb.com/products/Win32OpenSSL.html  
-`note:` this version of openssl require linking .lib files, with MinGW64 i had issus trying to link this type of file so the project was built on the base MinGW version.  
-
 #### using newer version of openssl:
 
 if you are using a later version this flag may be useful to hide deprecated warnings **-Wno-deprecated-declarations**    
@@ -88,7 +84,7 @@ on the test directory **Propeties -> C/C++ General -> Paths and Symbols -> Inclu
 
 command for example(replace path to where your openssl libraries directory is located):
 
-`g++ -std=c++11 "-LC:\\Program Files\\OpenSSL-Win64\\lib" -o MyProgram.exe *.cpp -lssl -lcrypto`
+`g++ -std=c++11 "-LC:\\openssl-1.1.1g-win32-mingw\\lib" -o MyProgram.exe *.cpp \encoder\*.cpp -lssl -lcrypto`
 
 ## Shared Context
 
